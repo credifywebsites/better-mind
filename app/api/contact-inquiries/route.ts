@@ -15,7 +15,7 @@ type ContactInquiry = {
   submittedAt?: string;
 };
 
-const requiredEnvironment = ["MAIL_USER", "MAIL_APP_PASSWORD", "MAIL_TO"] as const;
+const requiredEnvironment = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "CONTACT_RECEIVER"] as const;
 
 export async function POST(request: Request) {
   const missing = requiredEnvironment.filter((name) => !process.env[name]);
@@ -33,14 +33,16 @@ export async function POST(request: Request) {
   }
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_APP_PASSWORD },
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Number(process.env.SMTP_PORT) === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
 
   try {
     await transporter.sendMail({
-      from: process.env.MAIL_USER,
-      to: process.env.MAIL_TO,
+      from: `"BetterMind Web Form" <${process.env.SMTP_USER}>`,
+      to: process.env.CONTACT_RECEIVER,
       replyTo: inquiry.email,
       subject: `BetterMind contact inquiry: ${inquiry.topic}`,
       text: [
